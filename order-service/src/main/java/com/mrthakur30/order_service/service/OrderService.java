@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.mrthakur30.order_service.dto.CreateOrderRequest;
 import com.mrthakur30.order_service.entity.Order;
 import com.mrthakur30.order_service.entity.OrderItem;
@@ -16,6 +16,7 @@ import com.mrthakur30.order_service.repository.OrderRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor

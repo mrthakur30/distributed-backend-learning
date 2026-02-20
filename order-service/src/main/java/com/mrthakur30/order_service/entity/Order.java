@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.mrthakur30.order_service.enums.OrderStatus;
 
 import jakarta.persistence.CascadeType;
@@ -47,5 +48,7 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default  // ← Required when using @Builder with initialized fields
+    @JsonManagedReference
+
     private List<OrderItem> items = new ArrayList<>();
 }
