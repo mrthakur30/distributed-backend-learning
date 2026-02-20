@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,7 +14,7 @@ import com.mrthakur30.order_service.dto.CreateOrderRequest;
 import com.mrthakur30.order_service.entity.Order;
 import com.mrthakur30.order_service.service.OrderService;
 
-import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -25,9 +26,9 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> createOrder(
-            @Valid @RequestBody CreateOrderRequest request) {
+            @RequestBody CreateOrderRequest request, @RequestHeader("Idempotency-Key") String idempotencyKey) {
 
-        Order order = orderService.createOrder(request);
+        Order order = orderService.createOrder(request, idempotencyKey);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
