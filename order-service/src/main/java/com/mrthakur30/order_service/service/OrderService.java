@@ -7,12 +7,14 @@ import java.util.List;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-
 import com.mrthakur30.order_service.dto.CreateOrderRequest;
 import com.mrthakur30.order_service.entity.Order;
 import com.mrthakur30.order_service.entity.OrderItem;
+import com.mrthakur30.order_service.entity.Outbox;
 import com.mrthakur30.order_service.enums.OrderStatus;
+import com.mrthakur30.order_service.event.OrderCreatedEvent;
 import com.mrthakur30.order_service.repository.OrderRepository;
+import com.mrthakur30.order_service.repository.OutboxRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate redisTemplate;
+    private final OutboxRepository outboxRepository;
 
     private static final Duration LOCK_TTL = Duration.ofMinutes(5);
     private static final Duration RESPONSE_TTL = Duration.ofHours(24);
@@ -56,8 +59,7 @@ public class OrderService {
             // 2️⃣ Try acquiring distributed lock
             lockAcquired = Boolean.TRUE.equals(
                     redisTemplate.opsForValue()
-                            .setIfAbsent(lockKey, "LOCK", LOCK_TTL)
-            );
+                            .setIfAbsent(lockKey, "LOCK", LOCK_TTL));
         } catch (Exception ignored) {
             // Fail-open strategy
         }
@@ -96,6 +98,22 @@ public class OrderService {
             } catch (Exception ignored) {
                 // Redis optional
             }
+
+            OrderCreatedEvent event = new OrderCreatedEvent(
+                    order.getId(),
+                    order.getUserId(),
+                    LocalDateTime.now());
+
+            Outbox outbox = Outbox.builder()
+                    .aggregateType("ORDER")
+                    .aggregateId(order.getId())
+                    .eventType("ORDER_CREATED")
+                    .payload(objectMapper.writeValueAsString(event))
+                    .createdAt(LocalDateTime.now())
+                    .processed(false)
+                    .build();
+
+            outboxRepository.save(outbox);
 
             return order;
 
